@@ -2,38 +2,35 @@ import express from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
 
+import session from 'express-session';
+import connect from 'connect-session-sequelize';
+
 const port = process.env.PORT || 3010;
 const app = express();
 app.use(express.json());
 
 import { sequelize } from './db';
-import { users } from './models/user';
+import { users } from './models/users';
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+const SequelizeStore = connect(session.Store);
+const store = new SequelizeStore({
+  db: sequelize,
 });
 
-app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+app.use(
+  session({
+    secret: `${process.env.SESSION_SECRET}`,
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+  })
+);
 
-  let existingUser = await users.findAll({
-    where: {
-      username: username,
-    },
-  });
+sequelize.sync();
 
-  if (existingUser.length) {
-    // console.log('Existing user:' + existingUser);
-    return res.status(409).json({ message: 'Username already exists' });
-  }
-
-  const user = await users.create({
-    username,
-    email,
-    password,
-  });
-
-  res.json(user);
+app.get('/', (req: any, res: any) => {
+  req.session.isAuth = true;
+  res.send('Hello World!');
 });
 
 sequelize
@@ -42,7 +39,7 @@ sequelize
     console.log('Succesfully connected to database...');
   })
   .catch((err) => {
-    console.log('Unable to connect to the database.');
+    console.log('Unable to connect to the database...');
   });
 
 app.listen(port, () => {

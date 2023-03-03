@@ -6,3 +6,11 @@ CREATE TABLE users(
   created_at TIMESTAMP NOT NULL DEFAULT NOW(), 
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE sessions(
+  id UUID default uuid_generate_v4() UNIQUE PRIMARY KEY, 
+  user_id UUID NOT NULL, 
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(), 
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW(), 
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
